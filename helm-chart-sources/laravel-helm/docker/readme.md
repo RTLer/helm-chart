@@ -5,7 +5,7 @@
 install `laravel/horizon`, `laravel/octane`, `spiral/roadrunner`, `predis/predis` and `nunomaduro/larastan`. read each package for installation and configuration steps.
 for `predis/predis` set `database.redis.client` to `predis`
 
-then copy all files in this directory into your laravel project and put variables into your .env file.
+then copy all files in this directory into your Laravel project and put variables into your .env file.
 
 ``` env
 NGINX_IMAGE=app/nginx:latest
