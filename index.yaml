@@ -1,0 +1,30 @@
+apiVersion: v1
+entries:
+  laravel-helm:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-08-23T13:25:39.780498+04:30"
+    dependencies:
+    - alias: redisCache
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - cache
+      - redis
+      version: 17.0.5
+    - alias: redisQueue
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - queue
+      - redis
+      version: 17.0.5
+    description: laravel application chart
+    digest: 9d5e273fa485352cf597fa2b03904130cdb7a00d9ee0a14374175e9db7b79c66
+    icon: https://raw.githubusercontent.com/laravel/art/master/laravel-logo.png
+    name: laravel-helm
+    type: application
+    urls:
+    - https://rtler.github.io/helm-chart/laravel-helm-0.1.0.tgz
+    version: 0.1.0
+generated: "2022-08-23T13:25:39.773204+04:30"

@@ -1,0 +1,64 @@
+version: "3.1"
+services:
+  postgres:
+    image: postgres:14.3-alpine3.16
+    ports:
+      - 5433:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_DB: app
+      POSTGRES_PASSWORD: password
+    networks:
+      - app_net
+  redis:
+    image: redis:7.0-alpine3.16
+    networks:
+      - app_net
+  nginx:
+    image: "${NGINX_IMAGE}"
+    links:
+      - application
+    ports:
+      - 8070:80
+    networks:
+      - app_net
+    volumes:
+      - ./docker/nginx/default-dev.conf:/etc/nginx/conf.d/default.conf
+      - ./public:/var/www/html/public
+  application:
+    image: "${APPLICATION_IMAGE_FPM}"
+    links:
+      - redis
+    env_file: .env
+    volumes:
+      - ./app:/var/www/html/app
+      - ./storage:/var/www/html/storage
+      - ./routes:/var/www/html/routes
+      - ./config:/var/www/html/config
+      - ./resources:/var/www/html/resources
+      - ./public:/var/www/html/public
+      - ./database:/var/www/html/database
+      - ./composer.json:/var/www/html/composer.json
+      - ./composer.lock:/var/www/html/composer.lock
+      # - ./vendor:/var/www/html/vendor # for working with vendor
+    networks:
+      - app_net
+  php_worker:
+    image: "${QUEUE_WORKER_IMAGE}"
+    links:
+      - redis
+    restart: always
+    env_file: .env
+    volumes:
+      - ./docker/supervisor/queue.conf:/etc/supervisor/queue.conf
+      - ./:/var/www/html/
+    networks:
+      - app_net
+networks:
+  app_net:
+    driver: bridge
+volumes:
+  pgdata:
+    driver: local

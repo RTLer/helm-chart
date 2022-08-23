@@ -1,0 +1,4 @@
+version: "2.7"
+
+status:
+  address: 0.0.0.0:2114

@@ -1,0 +1,101 @@
+{{- if .Values.app.web.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "laravel-helm.fullname" . }}-web
+  labels:
+    {{- include "laravel-helm.labels" . | nindent 4 }}
+    pod-kind: web
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.app.web.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "laravel-helm.selectorLabels" . | nindent 6 }}
+      pod-kind: web
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "laravel-helm.selectorLabels" . | nindent 8 }}
+        pod-kind: web
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "laravel-helm.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        {{ if eq .Values.app.web.web_server "nginx" }}
+        - name: {{ .Chart.Name }}-php
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.app.repository }}/application_fpm:{{ .Values.app.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.app.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: fpm
+              containerPort: 9000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "laravel-helm.fullname" . }}-env
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: {{ .Chart.Name }}-nginx
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.app.repository }}/nginx:{{ .Values.app.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.app.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{ else }}
+        - name: {{ .Chart.Name }}-app
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.app.repository }}/application:{{ .Values.app.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.app.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            - name: health
+              containerPort: 2114
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "laravel-helm.fullname" . }}-env
+          livenessProbe:
+            httpGet:
+              path: /health?plugin=http
+              port: health
+          readinessProbe:
+            httpGet:
+              path: /health?plugin=http
+              port: health
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{ end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

@@ -1,0 +1,90 @@
+stages:
+  - merge_request
+  - build
+  - deploy
+
+
+.docker_login:
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - export CI_COMMIT_TAG="${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}"
+
+# code_quality:
+#   extends: .docker_login
+#   stage: merge_request
+#   script:
+#     - docker build --network=host --target=development -f Dockerfile.test -t $CI_REGISTRY_IMAGE/test .
+#     - docker run --entrypoint="/var/www/html/vendor/bin/phpstan" $CI_REGISTRY_IMAGE/test analyse --memory-limit=512M --error-format gitlab --no-progress -c /var/www/html/phpstan.neon > phpstan.json || true
+#     - docker run --env XDEBUG_MODE=coverage --entrypoint="/var/www/html/vendor/bin/phpunit" $CI_REGISTRY_IMAGE/test --coverage-text --colors=never
+#   artifacts:
+#     when: always
+#     reports:
+#       codequality: phpstan.json
+#   only:
+#     - merge_requests
+
+
+build_prod:
+  extends: .docker_login
+  stage: build
+  script:
+    - docker build --network=host --target=application_fpm -t $CI_REGISTRY_IMAGE/application_fpm:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE/application_fpm:$CI_COMMIT_TAG
+    - docker tag $CI_REGISTRY_IMAGE/application_fpm:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/application_fpm:latest
+    - docker push $CI_REGISTRY_IMAGE/application_fpm:latest
+
+    - docker build --network=host --target=application -t $CI_REGISTRY_IMAGE/application:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE/application:$CI_COMMIT_TAG
+    - docker tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/application:latest
+    - docker push $CI_REGISTRY_IMAGE/application:latest
+
+    - docker build --network=host --target=queue_worker -t $CI_REGISTRY_IMAGE/queue_worker:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE/queue_worker:$CI_COMMIT_TAG
+    - docker tag $CI_REGISTRY_IMAGE/queue_worker:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/queue_worker:latest
+    - docker push $CI_REGISTRY_IMAGE/queue_worker:latest
+
+    - docker build --network=host --target=schedule -t $CI_REGISTRY_IMAGE/schedule:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE/schedule:$CI_COMMIT_TAG
+    - docker tag $CI_REGISTRY_IMAGE/schedule:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/schedule:latest
+    - docker push $CI_REGISTRY_IMAGE/schedule:latest
+
+    - docker build --network=host --target=nginx -t $CI_REGISTRY_IMAGE/nginx:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE/nginx:$CI_COMMIT_TAG
+    - docker tag $CI_REGISTRY_IMAGE/nginx:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/nginx:latest
+    - docker push $CI_REGISTRY_IMAGE/nginx:latest
+
+  only:
+    - tags
+    - develop
+    - main
+
+.deploy_helm:
+  stage: deploy
+  script:
+    - mkdir -p $HOME/.kube
+    - echo ${config} | base64 -d > $HOME/.kube/config
+    - helm repo add ${chart_name} ${chart_addr} && helm repo update
+    - helm upgrade --install ${project_name} -n ${project_name} ${chart_name}/${project_name} --set app.tag=$CI_COMMIT_TAG
+
+
+# deploy_demo:
+#   extends: .deploy_helm
+#   variables:
+#     config: "${kube_config_demo}"
+#   only:
+#       - develop
+        
+# deploy_staging:
+#   extends: .deploy_helm
+#   variables:
+#     config: "${kube_config}"
+#   only:
+#       - main
+        
+# deploy_production:
+#   stage: deploy
+#   extends: .deploy_helm
+#   variables:
+#     config: "${kube_config}"
+#   only:
+#       - tags
