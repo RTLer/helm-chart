@@ -11,6 +11,12 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    {{ if eq .Values.app.web.web_server "roadrunner" }}
+    - port: {{ .Values.service.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+    {{ end }}
   selector:
     {{- include "laravel-helm.selectorLabels" . | nindent 4 }}
     pod-kind: web
