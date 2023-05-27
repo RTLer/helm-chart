@@ -3,7 +3,7 @@ entries:
   laravel-helm:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T13:25:39.780498+04:30"
+    created: "2023-05-27T08:50:27.172846+03:30"
     dependencies:
     - alias: redisCache
       name: redis
@@ -25,6 +25,17 @@ entries:
     name: laravel-helm
     type: application
     urls:
-    - https://rtler.github.io/helm-chart/laravel-helm-0.1.0.tgz
+    - laravel-helm-0.1.0.tgz
     version: 0.1.0
-generated: "2022-08-23T13:25:39.773204+04:30"
+  staticsite:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2023-05-27T08:50:27.173256+03:30"
+    description: A Helm chart Static Websites
+    digest: dbab3f07ff387b67ab4bf8bce6647e465464b50af94d1d2ad6edd4c2c8b8f95e
+    name: staticsite
+    type: application
+    urls:
+    - staticsite-0.1.0.tgz
+    version: 0.1.0
+generated: "2023-05-27T08:50:27.165251+03:30"
