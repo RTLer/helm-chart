@@ -3,7 +3,35 @@ entries:
   laravel-helm:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-05-27T08:52:30.689035+03:30"
+    created: "2023-06-24T09:28:41.769805+03:30"
+    dependencies:
+    - alias: redisCache
+      condition: redisCache.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - cache
+      - redis
+      version: 17.0.5
+    - alias: redisQueue
+      condition: redisQueue.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - queue
+      - redis
+      version: 17.0.5
+    description: laravel application chart
+    digest: f4b9713322ee6527db7bf14936f3dbd1dde4bbeed6893671d02c157a021f9fa6
+    icon: https://raw.githubusercontent.com/laravel/art/master/laravel-logo.png
+    name: laravel-helm
+    type: application
+    urls:
+    - laravel-helm-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2023-06-24T09:28:41.763805+03:30"
     dependencies:
     - alias: redisCache
       name: redis
@@ -30,7 +58,7 @@ entries:
   staticsite:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-05-27T08:52:30.689383+03:30"
+    created: "2023-06-24T09:28:41.770165+03:30"
     description: A Helm chart Static Websites in Zarinpal
     digest: dbab3f07ff387b67ab4bf8bce6647e465464b50af94d1d2ad6edd4c2c8b8f95e
     name: staticsite
@@ -38,4 +66,4 @@ entries:
     urls:
     - staticsite-0.1.0.tgz
     version: 0.1.0
-generated: "2023-05-27T08:52:30.683541+03:30"
+generated: "2023-06-24T09:28:41.758402+03:30"

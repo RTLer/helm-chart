@@ -23,11 +23,13 @@ app:
     enabled: false
 
 redisQueue:
+  enabled: true
   architecture: standalone
   fullnameOverride: queue
   auth:
     enabled: false
 redisCache:
+  enabled: true
   architecture: standalone
   fullnameOverride: cache
   auth:
